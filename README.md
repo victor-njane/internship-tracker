@@ -1,53 +1,73 @@
 # Internship Tracker
 
-A Django web application for organizing internship applications,
-deadlines, follow-ups, and communication history.
+A Django web application that organizes internship applications,
+deadlines, follow-ups, and communication history in one place.
+
+Built to address a practical part of the internship search: keeping
+application records and email updates organized without relying on
+a spreadsheet alone.
 
 ## Features
 
-- Create and edit internship applications.
-- Search by company or position and filter by application status.
-- Track application deadlines and upcoming actions.
-- Record communication history and completed follow-ups.
-- Export application records as CSV.
-- Sign in using a username or an unambiguous email address.
-- Reset passwords and delete an account with password confirmation.
-- Limit repeated login failures, signup submissions, and password-reset requests.
-- Connect Gmail to find potential application-related messages for review.
+- **Application dashboard:** Create and edit applications, search by
+  company or position, and filter by status.
+- **Deadlines and follow-ups:** Track application deadlines and next
+  actions, mark follow-ups complete, and preserve communication history.
+- **CSV export:** Download application records, including records hidden
+  by the current dashboard filters.
+- **Account management:** Register, sign in with a username or an
+  unambiguous email address, reset passwords, and delete an account
+  with password confirmation.
+- **Request limits:** Limit repeated login failures, signup submissions,
+  and password-reset requests.
+- **Optional Gmail integration:** Find potential application-related
+  emails and review them before saving changes.
 
-## Gmail integration
+## Gmail import workflow
 
-Gmail importing uses keyword and pattern matching, not an AI model.
+The importer uses keyword and pattern matching rather than an AI model.
 
-- Searches received messages from the last 90 days.
-- Saves plain-text previews without downloading attachments.
-- Suggests communication types and, for supported subject formats,
-  company and position.
-- Requires review before an email changes application records.
-- Remembers accepted and ignored messages to reduce duplicate imports.
-- Supports manual syncing and a background management command.
+1. Connect a Gmail account through Google OAuth.
+2. Search received messages from the last 90 days.
+3. Review plain-text previews and suggested application details.
+4. Accept relevant messages or ignore unrelated ones.
 
-Suggestions can be incorrect. Users should confirm them before saving.
+Attachments are not downloaded. Accepted and ignored messages are
+remembered to reduce duplicate imports. Suggestions can be incorrect,
+so application records change only after user review.
+
+Gmail tokens are encrypted using Fernet. Syncing can run manually or
+through a local background management command.
 
 ## Technology
 
 - Python and Django
-- SQLite for local development
+- SQLite
 - Django templates, HTML, and CSS
 - Google OAuth and Gmail API
-- Fernet encryption for stored Gmail tokens
+- Fernet token encryption
 - Django Axes for failed-login protection
+- Git and GitHub
 
-Exact installed dependency versions are recorded in `requirements.txt`.
+Dependency versions are pinned in `requirements.txt`.
 
-## Local setup on Windows
+## Project status
 
-The development environment uses Python 3.15.2 and Django 6.1.2.
-Other Python versions have not been verified for this complete project.
+The application currently runs locally. Public hosting is optional
+and is not configured in this repository.
+
+The project has been set up successfully from a clean repository clone.
+The latest local test run passed all 17 tests in the applications suite.
+This does not imply complete test coverage of every feature.
+
+## Local setup — Windows
+
+The verified development environment uses Python 3.15.2 and Django 6.1.2.
+Other Python versions have not been verified for the complete project.
 
 Open Command Prompt in the project folder.
 
-### 1. Create and activate a virtual environment
+### 1. Install dependencies
 
 ```bat
 python -m venv .venv
@@ -56,15 +76,15 @@ python -m pip install -r requirements.txt
 python -m pip check
 ```
 
-### 2. Configure environment variables
+### 2. Configure the environment
 
-Copy the example file on a fresh checkout:
+On a fresh checkout:
 
 ```bat
 copy .env.example .env
 ```
 
-Do not overwrite an existing `.env` containing your local configuration.
+Do not overwrite an existing `.env`.
 
 Generate a Django secret key:
 
@@ -72,28 +92,19 @@ Generate a Django secret key:
 python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
 ```
 
-Place the generated value after `DJANGO_SECRET_KEY=` in `.env`.
-Do not publish it.
+Set these values in `.env`, replacing the placeholder with the generated
+key. Keep the secret key inside quotes.
 
-For Gmail integration, configure a Google Cloud OAuth web application,
-enable the Gmail API, and use this authorized redirect URI:
-
-```text
-http://127.0.0.1:8000/accounts/google/callback/
+```dotenv
+DJANGO_SECRET_KEY='YOUR_GENERATED_SECRET_KEY'
+DJANGO_DEBUG=True
+DJANGO_ALLOWED_HOSTS=127.0.0.1,localhost
 ```
 
-Add the client ID and client secret to `.env`.
+Gmail credentials can remain blank when using the core application
+without Gmail integration.
 
-Generate the Gmail token-encryption key:
-
-```bat
-python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
-```
-
-Place it after `GMAIL_TOKEN_ENCRYPTION_KEY=` in `.env`.
-Keep the same encryption key while using saved Gmail connections.
-
-### 3. Prepare the database and start the application
+### 3. Create the database and start the app
 
 ```bat
 python manage.py migrate
@@ -103,7 +114,35 @@ python manage.py runserver
 
 Open http://127.0.0.1:8000/ and create an account.
 
-### 4. Optional background Gmail sync
+For local password-reset testing, find the reset email and link in the
+server terminal. Actual email delivery is not configured.
+
+## Optional Gmail setup
+
+1. Enable the Gmail API in a Google Cloud project.
+2. Configure the OAuth consent screen and a web application OAuth client.
+   If the OAuth app is in Testing mode, add the connecting account as
+   a test user.
+3. Register this authorized redirect URI:
+
+```text
+http://127.0.0.1:8000/accounts/google/callback/
+```
+
+4. Set `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, and
+   `GOOGLE_REDIRECT_URI` in `.env`.
+5. Generate a token-encryption key:
+
+```bat
+python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+```
+
+6. Set `GMAIL_TOKEN_ENCRYPTION_KEY` in `.env`, restart the server,
+   and connect Gmail from the application's Connected email page.
+
+Keep the encryption key consistent while using saved Gmail connections.
+
+### Background syncing
 
 After connecting Gmail, open a second terminal in the project folder:
 
@@ -114,44 +153,38 @@ python manage.py sync_gmail --username YOUR_USERNAME --watch --interval 300
 
 Replace `YOUR_USERNAME` with your tracker username.
 
-The process checks periodically while it remains running.
-Stop it with Ctrl+C. Closing the terminal or shutting down the
-computer stops local background syncing.
+The command checks periodically while the process remains running.
+Press Ctrl+C to stop it. Closing the terminal or shutting down the
+computer also stops syncing.
 
 ## Tests
-
-Run the tests included in this checkout:
 
 ```bat
 python manage.py test applications
 ```
 
-Review the output for the current test count and results.
+The terminal output reports the current test count and results.
 
-## Security and local data
+## Credentials and personal data
 
-Never commit:
+Do not commit or publish:
 
 - `.env` or real credentials
-- OAuth token files
-- The local SQLite database or its backups
+- OAuth tokens or encryption keys
+- Local SQLite databases or database backups
 - Personal email previews or exported application records
 
-Password-reset emails currently use the local console configuration.
-For local testing, retrieve the reset link from the server terminal.
-Public deployment requires configuring an actual email-delivery service.
+Use fictional or redacted data in screenshots and demonstrations.
 
-## Project status
+## Before public deployment
 
-This is a local-development project being prepared for deployment.
+A public deployment needs additional configuration and review:
 
-Remaining launch work includes:
-
-- Production hosting and HTTPS configuration
+- Production hosting, HTTPS, and static-file serving
 - Production email delivery and database backups
-- Background-worker deployment
+- Background-worker hosting if automatic syncing is enabled
 - Hosting-specific client-IP handling for rate limits
 - Google OAuth production requirements
-- Review of Gmail-derived data retention after disconnect or revocation
+- Gmail-derived data retention after disconnect or revocation
 
-The local Django development server is not the production hosting setup.
+Django's local development server is intended for development.
