@@ -1,0 +1,10 @@
+{% autoescape off %}You requested a password reset for your Internship Tracker account.
+
+Username: {{ user.get_username }}
+
+Open this link to choose a new password:
+{{ protocol }}://{{ domain }}{% url 'password_reset_confirm' uidb64=uid token=token %}
+
+If you did not request this, you can ignore this message. Your password has not changed.
+Do not share this link; it allows access to reset your password.
+{% endautoescape %}

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="referrer" content="same-origin">
+    <title>{% if deleted %}Account deleted{% else %}Account settings{% endif %} | Internship Tracker</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { margin: 0; background: #f3f6fb; color: #182238; font: 16px Arial, sans-serif; }
+        main { max-width: 760px; margin: 40px auto; padding: 0 20px; overflow-wrap: anywhere; }
+        h1 { line-height: 1.2; }
+        h2 { margin-top: 0; }
+        p, li { line-height: 1.6; }
+        .panel { background: white; border: 1px solid #dce3ee; border-radius: 12px; padding: 24px; margin: 24px 0; }
+        .danger-panel { border-top: 4px solid #b42318; }
+        a { color: #2455c5; }
+        .muted { color: #596579; }
+        .field { margin: 24px 0; }
+        label { display: block; font-weight: bold; margin-bottom: 8px; }
+        input[type="password"] { width: 100%; min-width: 0; min-height: 44px; padding: 12px; border: 1px solid #b8c3d4; border-radius: 8px; font: inherit; }
+        .confirmation { display: flex; align-items: flex-start; gap: 12px; min-height: 44px; line-height: 1.5; }
+        input[type="checkbox"] { flex: 0 0 22px; width: 22px; height: 22px; margin: 2px 0 0; accent-color: #b42318; }
+        button, .button { display: inline-flex; justify-content: center; align-items: center; min-height: 44px; padding: 12px 18px; border: 0; border-radius: 8px; font: inherit; text-align: center; text-decoration: none; cursor: pointer; background: #2455c5; color: white; }
+        .danger { background: #b42318; }
+        .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; }
+        .actions a:not(.button), main > a { display: inline-flex; align-items: center; min-height: 44px; }
+        .errorlist, .error-summary { color: #9f2929; }
+        .error-summary { background: #fde4e4; padding: 12px; border-radius: 8px; }
+        :focus-visible { outline: 3px solid #2455c5; outline-offset: 3px; }
+        @media (max-width: 650px) {
+            main { margin: 24px auto; padding: 0 14px; }
+            h1 { font-size: 28px; }
+            .panel { padding: 16px; }
+            .actions { flex-direction: column; align-items: stretch; }
+            .actions > * { width: 100%; justify-content: center; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+<main>
+{% if deleted %}
+    <section class="panel">
+        <h1>Account deleted</h1>
+        <p>Your tracker account, applications, communication history, imported email previews, and any saved Gmail connection have been removed from this site's database.</p>
+        <p>You have been logged out. Your messages in Gmail were not deleted.</p>
+        {% if had_gmail %}
+            {% if revoked %}
+                <p>Google confirmed that access was revoked.</p>
+            {% else %}
+                <p><strong>Google access revocation could not be confirmed.</strong> Your saved connection was removed locally. Remove Internship Tracker from your Google account connections:</p>
+                <p><a href="https://myaccount.google.com/connections" target="_blank" rel="noopener noreferrer">Manage Google account connections</a></p>
+            {% endif %}
+        {% endif %}
+        <p class="muted">Previously downloaded files and existing backup copies are not erased by this action.</p>
+        <a class="button" href="{% url 'login' %}">Back to log in</a>
+    </section>
+{% else %}
+    <a href="{% url 'dashboard' %}">← Back to dashboard</a>
+    <h1>Account settings</h1>
+    <p>Signed in as <strong>{{ request.user.username }}</strong></p>
+    <section class="panel">
+        <h2>Keep a copy first</h2>
+        <p>Export your applications before deleting your account. The CSV contains application records, including notes, but does not include communication history or saved email previews.</p>
+        <a class="button" href="{% url 'application_export' %}">Export applications (CSV)</a>
+    </section>
+    <section class="panel danger-panel" aria-labelledby="delete-title">
+        <h2 id="delete-title">Delete account and tracker data</h2>
+        <p>This permanently removes:</p>
+        <ul>
+            <li>Your account and login access.</li>
+            <li>{{ application_count }} application record(s).</li>
+            <li>{{ event_count }} communication history entry/entries.</li>
+            <li>{{ preview_count }} imported email preview(s), including accepted and ignored previews.</li>
+            <li>Your saved Gmail connection, if present.</li>
+        </ul>
+        <p><strong>This cannot be undone through the tracker.</strong> Your messages in Gmail will not be deleted. Records added before deletion finishes will also be removed.</p>
+        {% if has_gmail %}
+            <p>We will also attempt to revoke Google's access grant. If that fails, we will show you how to remove access manually.</p>
+            <p class="muted">Revoking access may also require reconnecting another tracker account linked to the same Gmail account.</p>
+        {% endif %}
+        <p class="muted">Downloaded exports and existing backup copies are not erased.</p>
+        <form method="post" action="{% url 'account_settings' %}">
+            {% csrf_token %}
+            {{ form.account_id }}
+            {% if form.errors %}
+                <div class="error-summary" role="alert">Your account was not deleted. Correct the errors below.</div>
+            {% endif %}
+            {{ form.non_field_errors }}
+            {{ form.account_id.errors }}
+            <div class="field">
+                <label for="{{ form.password.id_for_label }}">{{ form.password.label }}</label>
+                {{ form.password }}
+                {{ form.password.errors }}
+            </div>
+            <div class="field">
+                <label class="confirmation" for="{{ form.confirm.id_for_label }}">
+                    {{ form.confirm }}
+                    <span>{{ form.confirm.label }}</span>
+                </label>
+                {{ form.confirm.errors }}
+            </div>
+            <div class="actions">
+                <button class="danger" type="submit">Permanently delete my account</button>
+                <a href="{% url 'dashboard' %}">Cancel</a>
+            </div>
+        </form>
+    </section>
+{% endif %}
+</main>
+</body>
+</html>

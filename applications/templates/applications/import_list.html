@@ -1,0 +1,168 @@
+{% extends "applications/import_base.html" %}
+{% block content %}
+<h1>Review email imports</h1>
+<p class="muted">Searches received mail from the last 90 days for application-related words. Matches can be unrelated; review each email before accepting. Nothing changes an application automatically.</p>
+{% if connection %}
+    <p>Connected: {{ connection.email }}</p>
+        <section class="panel" aria-labelledby="sync-status-title">
+        <h2 id="sync-status-title">Gmail sync status</h2>
+
+        {% if connection.sync_in_progress %}
+            <p>
+                <strong>A sync is running or was recently interrupted.</strong>
+                Refresh shortly to check its progress.
+            </p>
+        {% endif %}
+
+        <p>
+            <strong>Last attempt:</strong>
+            {% if connection.last_sync_attempt_at %}
+                {{ connection.last_sync_attempt_at|date:"M j, Y, g:i:s a T" }}
+            {% else %}
+                No attempt recorded since this feature was added.
+            {% endif %}
+        </p>
+
+        <p>
+            <strong>Last successful batch:</strong>
+            {% if connection.last_sync_at %}
+                {{ connection.last_sync_at|date:"M j, Y, g:i:s a T" }}
+            {% else %}
+                No successful batch yet.
+            {% endif %}
+        </p>
+
+        <p>
+            <strong>Last completed search:</strong>
+            {% if connection.last_search_completed_at %}
+                {{ connection.last_search_completed_at|date:"M j, Y, g:i:s a T" }}
+            {% else %}
+                No completed search recorded since this feature was added.
+            {% endif %}
+        </p>
+
+        {% if connection.last_sync_error %}
+            <p role="status">
+                <strong>Most recent sync error:</strong>
+                {{ connection.last_sync_error }}
+            </p>
+            <p>
+                <a href="{% url 'gmail_settings' %}">
+                    Manage Gmail connection
+                </a>
+            </p>
+        {% endif %}
+
+        {% if connection.sync_page_token %}
+            <p>More batches remain in the current search.</p>
+        {% endif %}
+
+        <p class="muted">
+            These timestamps show past activity, not whether automatic syncing
+            is still running. Keep the sync terminal open and refresh this page
+            to see updates.
+        </p>
+    </section>
+    <div class="actions">
+        <form method="post" action="{% url 'gmail_sync' %}">
+            {% csrf_token %}
+            <button type="submit">{% if connection.sync_page_token %}Continue sync{% else %}Sync now{% endif %}</button>
+        </form>
+        {% if connection.sync_query %}
+        <form method="post" action="{% url 'gmail_sync' %}">
+            {% csrf_token %}<input type="hidden" name="restart" value="1">
+            <button type="submit" class="secondary">Start a new search</button>
+        </form>
+        {% endif %}
+    </div>
+    <p class="muted">Up to 20 matches per batch. No attachments are downloaded. Accepted and ignored emails are remembered across reconnects.</p>
+{% else %}
+    <p><a href="{% url 'gmail_settings' %}">Connect Gmail</a> to fetch more emails. Previously fetched previews remain available below.</p>
+{% endif %}
+<nav class="actions" aria-label="Review status">
+    {% for value, label in states %}
+        <a href="?state={{ value }}" {% if selected_state == value %}aria-current="page"{% endif %}>{{ label }}</a>
+    {% endfor %}
+</nav>
+<p class="muted">{{ page_obj.paginator.count }} email(s) in this view.</p>
+{% if selected_state == 'pending' and page_obj.paginator.count %}
+<form id="bulk-ignore-form" method="post"
+      action="{% url 'import_list' %}" class="panel">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="bulk_ignore">
+
+    <label>
+        <input type="checkbox" id="select-all-emails" style="width: auto;">
+        Select all on this page
+    </label>
+
+    <button type="submit" class="secondary">Ignore selected</button>
+
+    <p class="muted">
+        Only checked emails will move to Ignored.
+        Gmail messages are not deleted.
+    </p>
+</form>
+{% endif %}
+{% for item in page_obj %}
+<article class="panel">
+        {% if item.review_state == 'pending' %}
+    <label>
+        <input type="checkbox"
+               name="emails"
+               value="{{ item.pk }}"
+               form="bulk-ignore-form"
+               class="email-selection"
+               style="width: auto;">
+        Select this email
+    </label>
+    {% endif %}
+    <h2>{{ item.subject|default:"(No subject)" }}</h2>
+    <p class="muted">{{ item.sender }}<br>{{ item.received_at|date:"M j, Y, g:i a" }} · Mailbox: {{ item.mailbox }}</p>
+    <p>Suggested type: {{ item.get_suggested_type_display }}</p>
+    <p>{{ item.preview|truncatechars:300 }}</p>
+    <div class="actions">
+        <a class="button" href="{% url 'import_review' item.pk %}">{% if item.review_state == 'accepted' %}View import{% else %}Review{% endif %}</a>
+        {% if item.review_state == 'pending' %}
+        <form method="post" action="{% url 'import_ignore' item.pk %}">
+            {% csrf_token %}<button type="submit" class="secondary">Ignore</button>
+        </form>
+        {% endif %}
+    </div>
+</article>
+{% empty %}
+<div class="panel"><p>No emails in this view yet.</p><p class="muted">Try Sync now. If no matches are found, check whether your application emails arrived in this Gmail account within the last 90 days.</p></div>
+{% endfor %}
+<nav class="actions" aria-label="Pages">
+    {% if page_obj.has_previous %}<a href="?state={{ selected_state }}&amp;page={{ page_obj.previous_page_number }}">Previous</a>{% endif %}
+    <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+    {% if page_obj.has_next %}<a href="?state={{ selected_state }}&amp;page={{ page_obj.next_page_number }}">Next</a>{% endif %}
+</nav>
+<script>
+const selectAll = document.getElementById("select-all-emails");
+const emailCheckboxes = [
+    ...document.querySelectorAll(".email-selection")
+];
+
+if (selectAll) {
+    selectAll.addEventListener("change", () => {
+        emailCheckboxes.forEach(box => {
+            box.checked = selectAll.checked;
+        });
+        selectAll.indeterminate = false;
+    });
+
+    emailCheckboxes.forEach(box => {
+        box.addEventListener("change", () => {
+            const count = emailCheckboxes.filter(
+                box => box.checked
+            ).length;
+
+            selectAll.checked = count === emailCheckboxes.length;
+            selectAll.indeterminate =
+                count > 0 && count < emailCheckboxes.length;
+        });
+    });
+}
+</script>
+{% endblock %}

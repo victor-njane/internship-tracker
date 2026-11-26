@@ -1,0 +1,37 @@
+
+.env
+.venv/
+__pycache__/
+*.pyc
+db.sqlite3
+client_secret*.json
+
+# Additional environment files; allow a safe setup example
+.env.*
+!.env.example
+
+# Local database files and SQLite temporary files
+*.sqlite3
+*.sqlite3-journal
+*.sqlite3-wal
+*.sqlite3-shm
+
+# Other local credentials
+credentials.json
+token.json
+token.pickle
+service-account*.json
+
+# Generated Python files and local output
+*.pyo
+.pytest_cache/
+.coverage
+htmlcov/
+*.log
+staticfiles/
+
+# Local backups
+backups/
+
+# Local editor settings
+.vscode/

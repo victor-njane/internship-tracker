@@ -1,0 +1,42 @@
+{% extends "applications/import_base.html" %}
+{% block title %}Review email{% endblock %}
+{% block content %}
+<h1>Review this email</h1>
+<section class="panel">
+    <h2>{{ item.subject|default:"(No subject)" }}</h2>
+    <p class="muted">From: {{ item.sender }}<br>Received: {{ item.received_at|date:"M j, Y, g:i a" }}<br>Mailbox: {{ item.mailbox }}</p>
+    <details><summary>Show saved email preview</summary><div class="preview">{{ item.preview }}</div></details>
+    <p class="muted">Preview is limited to 8,000 characters. Check the original email in Gmail for full details and attachments.</p>
+</section>
+{% if form %}
+<section class="panel">
+    <h2>Choose what to save</h2>
+    <p>
+    Company and position may be suggested from the email subject.
+    An existing application is selected only when exactly one of your
+    records matches both fields.
+    Check every suggestion before saving.
+    If no match is selected, choose an existing application or select
+    Create a new application.
+</p>
+    {% if item.review_state == 'ignored' %}<p>This email was ignored. You can still accept it here.</p>{% endif %}
+    <form method="post" action="{% url 'import_review' item.pk %}">
+        {% csrf_token %}
+        {% if form.errors %}<p class="errorlist" role="alert">Please correct the fields below.</p>{% endif %}
+        {{ form.non_field_errors }}
+        {% for field in form %}
+            <div class="field"><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}
+                {% if field.help_text %}<div class="help">{{ field.help_text }}</div>{% endif %}{{ field.errors }}
+            </div>
+        {% endfor %}
+        <div class="actions"><button type="submit">Accept and save to tracker</button><a href="{% url 'import_list' %}">Cancel</a></div>
+    </form>
+    <p class="muted">This adds a communication event. It does not schedule an interview or change your next action. Use Edit application for those fields.</p>
+</section>
+{% else %}
+<section class="panel">
+    <p>This email has already been accepted. It cannot be imported again.</p>
+    {% if item.application %}<a href="{% url 'application_history' item.application.pk %}">View application history</a>{% else %}<p>The linked application has been deleted.</p>{% endif %}
+</section>
+{% endif %}
+{% endblock %}

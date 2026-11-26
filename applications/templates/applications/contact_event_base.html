@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Communication{% endblock %} | Internship Tracker</title>
+
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            background: #f3f6fb;
+            color: #182238;
+            font-family: Arial, sans-serif;
+        }
+
+        main {
+            max-width: 760px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        a { color: #2455c5; }
+
+        h1 { margin-bottom: 8px; }
+
+        .subtitle {
+            color: #596579;
+            margin-bottom: 24px;
+        }
+
+        .panel {
+            background: white;
+            border: 1px solid #dce3ee;
+            border-radius: 12px;
+            padding: 26px;
+        }
+
+        .field { margin-bottom: 22px; }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #b8c3d4;
+            border-radius: 8px;
+            font: inherit;
+        }
+
+        textarea { resize: vertical; }
+
+        input:focus, select:focus, textarea:focus {
+            outline: 2px solid #2455c5;
+            outline-offset: 2px;
+        }
+
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 18px;
+            margin-top: 24px;
+        }
+
+        button {
+            background: #2455c5;
+            color: white;
+            padding: 12px 18px;
+            border: 0;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .danger { background: #b42318; }
+
+        .errorlist { color: #a12626; }
+
+        .error-summary {
+            background: #fde4e4;
+            color: #8b2020;
+            padding: 12px;
+            border-radius: 8px;
+        }
+
+        .event-preview {
+            background: #f3f6fb;
+            border-left: 3px solid #2455c5;
+            padding: 16px;
+            margin: 20px 0;
+            overflow-wrap: anywhere;
+        }
+    </style>
+</head>
+
+<body>
+<main>
+    <a href="{% url 'application_history' application.pk %}">
+        ← Back to communication history
+    </a>
+
+    {% block content %}{% endblock %}
+</main>
+</body>
+</html>

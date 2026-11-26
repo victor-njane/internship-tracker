@@ -1,0 +1,41 @@
+{% extends "applications/contact_event_base.html" %}
+
+{% block title %}Delete communication{% endblock %}
+
+{% block content %}
+    <h1>Delete this communication?</h1>
+
+    <p class="subtitle">
+        {{ application.company }} · {{ application.position }}
+    </p>
+
+    <section class="panel">
+        <p>
+            This permanently removes the event below.
+            The application and its other events will remain.
+        </p>
+
+        <div class="event-preview">
+            <strong>{{ event.get_event_type_display }}</strong>
+
+            <p>{{ event.date|date:"M j, Y" }}</p>
+
+            <p>{{ event.summary|linebreaksbr }}</p>
+        </div>
+
+        <form method="post"
+              action="{% url 'contact_event_delete' application.pk event.pk %}">
+            {% csrf_token %}
+
+            <div class="actions">
+                <button type="submit" class="danger">
+                    Delete communication
+                </button>
+
+                <a href="{% url 'application_history' application.pk %}">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </section>
+{% endblock %}

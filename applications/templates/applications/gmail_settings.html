@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Connected email | Internship Tracker</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { margin: 0; background: #f3f6fb; color: #182238; font-family: Arial, sans-serif; }
+        main { max-width: 760px; margin: 48px auto; padding: 0 20px; }
+        a { color: #2455c5; }
+        h1 { margin-bottom: 8px; }
+        p { line-height: 1.6; }
+        .panel { background: white; border: 1px solid #dce3ee; border-radius: 12px; padding: 26px; margin-top: 24px; }
+        .muted { color: #596579; }
+        .notice { padding: 14px; border-radius: 8px; background: #e5edff; overflow-wrap: anywhere; }
+        .email { overflow-wrap: anywhere; font-weight: bold; }
+        button { border: 0; border-radius: 8px; padding: 12px 18px; background: #2455c5; color: white; font: inherit; cursor: pointer; }
+        .disconnect { background: #b42318; }
+        button:focus-visible, a:focus-visible { outline: 3px solid #2455c5; outline-offset: 3px; }
+    </style>
+</head>
+<body>
+<main>
+    <a href="{% url 'dashboard' %}">← Back to dashboard</a>
+    <h1>Connected email</h1>
+    <p class="muted">Signed in as {{ request.user.username }}</p>
+    <div aria-live="polite">
+        {% for message in messages %}
+            <p class="notice" role="status">{{ message }}</p>
+        {% endfor %}
+    </div>
+    <section class="panel" aria-label="Gmail connection">
+        {% if connection %}
+            <h2>Gmail connected</h2>
+            <p class="email">{{ connection.email }}</p>
+            <p>Search the last 90 days for likely application emails. Fetches up to 20 matches per batch; nothing changes your applications until you approve it.</p>
+            <form method="post" action="{% url 'gmail_sync' %}">
+                {% csrf_token %}
+                <button type="submit">{% if connection.sync_page_token %}Continue sync{% else %}Sync now{% endif %}</button>
+            </form>
+            {% if connection.last_sync_at %}<p class="muted">Last completed batch: {{ connection.last_sync_at|date:"M j, Y, g:i a" }}</p>{% endif %}
+            <p><a href="{% url 'import_list' %}">Review imports</a></p>
+            <p class="muted">Disconnecting removes saved access and attempts to revoke it at Google. Your application records remain.</p>
+            <form method="post" action="{% url 'gmail_disconnect' %}">
+                {% csrf_token %}
+                <button type="submit" class="disconnect">Disconnect Gmail</button>
+            </form>
+        {% else %}
+            <h2>Connect your Gmail</h2>
+            <p>Authorize read-only Gmail access on Google's sign-in page. Never enter your Google password into this tracker.</p>
+            <p class="muted">This permission covers your mailbox, not just internship emails. Syncing saves a plain-text preview of matching emails for your review. Attachments are not downloaded.</p>
+            <form method="post" action="{% url 'gmail_connect' %}">
+                {% csrf_token %}
+                <button type="submit">Connect Gmail</button>
+            </form>
+        {% endif %}
+    </section>
+    <p><a href="{% url 'import_list' %}">View saved imports</a></p>
+    <p><a href="https://myaccount.google.com/connections" target="_blank" rel="noopener noreferrer">Manage access in your Google account</a></p>
+</main>
+</body>
+</html>

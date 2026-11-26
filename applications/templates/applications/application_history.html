@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ application.company }} | Communication history</title>
+
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            background: #f3f6fb;
+            color: #182238;
+            font-family: Arial, sans-serif;
+        }
+
+        main {
+            max-width: 1050px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        a { color: #2455c5; }
+
+        h1 { margin-bottom: 8px; }
+
+        .subtitle {
+            color: #596579;
+            margin-bottom: 24px;
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            align-items: start;
+            gap: 24px;
+        }
+
+        .panel {
+            background: white;
+            border: 1px solid #dce3ee;
+            border-radius: 12px;
+            padding: 24px;
+        }
+
+        h2 {
+            margin-top: 0;
+            font-size: 21px;
+        }
+
+        .timeline {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .event {
+            border-left: 3px solid #2455c5;
+            padding: 0 0 4px 16px;
+            margin: 24px 0;
+        }
+
+        .event h3 {
+            margin: 0 0 6px;
+            font-size: 16px;
+        }
+
+        .event time {
+            color: #596579;
+            font-size: 14px;
+        }
+
+        .event p {
+            line-height: 1.6;
+            overflow-wrap: anywhere;
+        }
+
+        .field { margin-bottom: 20px; }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #b8c3d4;
+            border-radius: 8px;
+            background: white;
+            color: #182238;
+            font: inherit;
+        }
+
+        textarea { resize: vertical; }
+
+        input:focus, select:focus, textarea:focus {
+            outline: 2px solid #2455c5;
+            outline-offset: 2px;
+        }
+
+        button {
+            background: #2455c5;
+            color: white;
+            padding: 12px 18px;
+            border: 0;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .errorlist { color: #a12626; }
+
+        .error-summary {
+            color: #8b2020;
+            background: #fde4e4;
+            padding: 12px;
+            border-radius: 8px;
+        }
+
+        .hint {
+            color: #596579;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        @media (max-width: 750px) {
+            .layout { grid-template-columns: 1fr; }
+        }
+
+        .event-actions {
+            display: flex;
+            gap: 18px;
+            margin-top: 12px;
+        }
+
+        .delete-link {
+            color: #b42318;
+        }
+
+        /* Mobile layout and touch controls */
+main {
+    overflow-wrap: anywhere;
+}
+
+main > *, .panel, .field, form {
+    min-width: 0;
+}
+
+input, select, textarea {
+    max-width: 100%;
+    min-width: 0;
+    font-size: 16px;
+}
+
+input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]),
+select, button, .button {
+    min-height: 44px;
+}
+
+button, .button {
+    max-width: 100%;
+    white-space: normal;
+    text-align: center;
+}
+
+textarea {
+    resize: vertical;
+}
+
+.actions > *, .event-actions > * {
+    min-width: 0;
+}
+
+nav.actions a,
+.event-actions a,
+main > a,
+.history-link a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+}
+
+.event-actions {
+    flex-wrap: wrap;
+}
+
+a:focus-visible,
+button:focus-visible,
+summary:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex="0"]:focus-visible {
+    outline: 3px solid #2455c5;
+    outline-offset: 3px;
+}
+
+summary {
+    min-height: 44px;
+    padding: 12px 0;
+    cursor: pointer;
+}
+
+.preview {
+    max-width: 100%;
+}
+
+@media (max-width: 650px) {
+    main {
+        margin: 24px auto;
+        padding: 0 14px;
+    }
+
+    h1 {
+        font-size: 28px;
+        line-height: 1.2;
+    }
+
+    h2 {
+        font-size: 22px;
+        line-height: 1.3;
+    }
+
+    .panel, .card, .action-card {
+        padding: 16px;
+    }
+
+    .field {
+        min-width: 0;
+        width: 100%;
+    }
+
+    .actions:not(nav) {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+    }
+
+    .actions:not(nav) > form,
+    .actions:not(nav) > button,
+    .actions:not(nav) > .button,
+    .actions:not(nav) > form > button {
+        width: 100%;
+    }
+
+    .actions:not(nav) > a {
+        min-height: 44px;
+        padding: 12px 0;
+        text-align: center;
+    }
+
+    nav.actions {
+        gap: 4px 16px;
+    }
+
+    .layout > .panel > form > button {
+        width: 100%;
+    }
+}
+.layout {
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+}
+
+@media (max-width: 750px) {
+    .layout {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+    </style>
+</head>
+
+<body>
+<main>
+    <a href="{% url 'dashboard' %}">← Back to dashboard</a>
+
+    <h1>{{ application.company }}</h1>
+
+    <p class="subtitle">
+        {{ application.position }}
+        · {{ application.get_status_display }}
+        ·
+        <a href="{% url 'application_edit' application.pk %}">
+            Edit application
+        </a>
+    </p>
+
+    <div class="layout">
+        <section class="panel">
+            <h2>Communication history</h2>
+
+            <ol class="timeline">
+                {% for event in events %}
+                    <li class="event">
+                        <h3>{{ event.get_event_type_display }}</h3>
+
+                    <time datetime="{{ event.date|date:'Y-m-d' }}">
+                        {{ event.date|date:"M j, Y" }}
+                    </time>
+
+                    <p>{{ event.summary|linebreaksbr }}</p>
+
+                    <div class="event-actions">
+                        <a href="{% url 'contact_event_edit' application.pk event.pk %}">
+                            Edit
+                        </a>
+
+                        <a class="delete-link"
+                            href="{% url 'contact_event_delete' application.pk event.pk %}">
+                                Delete
+                        </a>
+            </div>
+        </li>
+    {% empty %}
+        <li>
+            No communication logged yet.
+            Use the form to add your first event.
+        </li>
+    {% endfor %}
+</ol>
+        </section>
+
+        <section class="panel">
+            <h2>Log communication</h2>
+
+            <p class="hint">
+                Record an email, call, interview invitation,
+                offer, or follow-up. All fields are required.
+            </p>
+
+            <form method="post"
+                  action="{% url 'application_history' application.pk %}">
+                {% csrf_token %}
+
+                {% if form.errors %}
+                    <p class="error-summary" role="alert">
+                        Please fix the errors below.
+                    </p>
+                {% endif %}
+
+                {{ form.non_field_errors }}
+
+                {% for field in form %}
+                    <div class="field">
+                        <label for="{{ field.id_for_label }}">
+                            {{ field.label }}
+                        </label>
+
+                        {{ field }}
+                        {{ field.errors }}
+                    </div>
+                {% endfor %}
+
+                <button type="submit">Save communication</button>
+            </form>
+
+            <p class="hint">
+                Logging communication does not change the application's
+                status. Use Edit application to update it.
+            </p>
+        </section>
+    </div>
+</main>
+</body>
+</html>
